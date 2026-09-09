@@ -90,5 +90,27 @@ try {
   </footer>
 
   <script src="js/ui.js"></script>
+  <script>
+    const searchInput = document.getElementById('menu-search');
+    const menuItems = document.querySelectorAll('.prod');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+
+        menuItems.forEach(item => {
+          // Find the product name inside the <strong> tag
+          const itemName = item.querySelector('strong').textContent.toLowerCase();
+          
+          // Toggle display based on whether the name includes the search term
+          if (itemName.includes(searchTerm)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    }
+  </script>
 </body>
 </html>
