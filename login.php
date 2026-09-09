@@ -1,13 +1,12 @@
 <?php
 include 'config/db.php';
 
-// Redirect if already logged in
 if (isset($_SESSION['staff'])) {
     header("Location: staff/dashboard.php");
     exit;
 }
 if (isset($_SESSION['customer'])) {
-    header("Location: landing.php");
+    header("Location: menu.php");
     exit;
 }
 
@@ -20,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email']);
         $pass = $_POST['password'];
 
-        // Check staff first
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND password = ?");
         $stmt->execute([$email, $pass]);
         $staff = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -31,14 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Check customers
         $stmt = $pdo->prepare("SELECT * FROM customers WHERE email = ? AND password = ?");
         $stmt->execute([$email, $pass]);
         $customer = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($customer) {
             $_SESSION['customer'] = ['id' => $customer['id'], 'name' => $customer['name'], 'email' => $customer['email']];
-            header("Location: index.php");
+            header("Location: menu.php");
             exit;
         }
 
@@ -49,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pass = $_POST['password'];
         $role = $_POST['role'];
 
-        // Verify email uniqueness
         $userCheck = $pdo->prepare("SELECT email FROM users WHERE email = ?");
         $userCheck->execute([$email]);
         $cusCheck = $pdo->prepare("SELECT email FROM customers WHERE email = ?");
@@ -62,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = 'cus-' . substr(md5(uniqid()), 0, 6);
                 $pdo->prepare("INSERT INTO customers (id, name, email, password) VALUES (?, ?, ?, ?)")->execute([$id, $name, $email, $pass]);
                 $_SESSION['customer'] = ['id' => $id, 'name' => $name, 'email' => $email];
-                header("Location: index.php");
+                header("Location: menu.php");
                 exit;
             } else {
                 $id = 'usr-' . substr(md5(uniqid()), 0, 6);
@@ -81,12 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Sign In — CrispyWraps</title>
-<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
 <main class="auth-page">
   <div class="card auth-card">
-    <a class="brand" href="landing.php" style="margin-bottom:1rem">
+    <a class="brand" href="index.php" style="margin-bottom:1rem">
       <span class="brand-mark">CW</span>
       <span><strong>CrispyWraps</strong><small>One sign in for everyone</small></span>
     </a>
@@ -101,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form id="login" method="POST" action="login.php">
-      <form id="login" method="POST" action="login.php">
       <input type="hidden" name="form_action" value="login" />
       <div class="field"><label>Email</label><input name="email" type="email" placeholder="you@example.com" required /></div>
       <div class="field"><label>Password</label><input name="password" type="password" placeholder="••••••" required /></div>
@@ -124,12 +119,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <button type="submit" class="btn" style="width:100%;justify-content:center">Create account</button>
     </form>
     
-    <p class="center" style="margin-top:1rem"><a class="muted" href="landing.php">← Back to home</a></p>
+    <p class="center" style="margin-top:1rem"><a class="muted" href="index.php">← Back to home</a></p>
   </div>
 </main>
 
 <script>
-// Toggle forms visually
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
   document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("active", x === b));
   document.getElementById("login").hidden = b.dataset.t !== "login";

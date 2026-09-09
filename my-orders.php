@@ -14,7 +14,7 @@ $me = $_SESSION['customer'];
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>My Orders — CrispyWraps</title>
-<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
@@ -80,9 +80,6 @@ $me = $_SESSION['customer'];
   </div>
 </main>
 <script src="js/ui.js"></script>
-<script>
-// Optional: If you still need the customer nav generation from ui.js
-mountCustomerNav("my-orders.php");
 </script>
 </body>
 </html>

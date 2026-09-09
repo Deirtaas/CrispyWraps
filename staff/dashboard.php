@@ -5,7 +5,6 @@ if (!isset($_SESSION['staff'])) {
     exit;
 }
 
-// Fetch Stats
 $today = date('Y-m-d');
 $salesStmt = $pdo->query("SELECT SUM(total) as total FROM orders WHERE DATE(date) = '$today' AND status != 'Cancelled'");
 $salesToday = $salesStmt->fetch()['total'] ?? 0;
@@ -25,7 +24,7 @@ $menuItems = $menuItemsStmt->fetch()['count'];
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Dashboard — CrispyWraps Staff</title>
-<link rel="stylesheet" href="../css/styles.css" />
+<link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
 <div class="staff-layout">

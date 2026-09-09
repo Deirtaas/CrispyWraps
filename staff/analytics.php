@@ -32,7 +32,7 @@ $lowStockCount = count(array_filter($ingredients, function($i) { return $i['stoc
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Analytics — CrispyWraps Staff</title>
-<link rel="stylesheet" href="../css/styles.css" />
+<link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
 <div class="staff-layout">

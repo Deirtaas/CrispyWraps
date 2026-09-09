@@ -31,7 +31,7 @@ $feedbacks = $pdo->query("SELECT f.*, p.name as prod_name FROM feedback f LEFT J
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Feedback — CrispyWraps</title>
-<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
@@ -99,6 +99,5 @@ $feedbacks = $pdo->query("SELECT f.*, p.name as prod_name FROM feedback f LEFT J
   </div>
 </main>
 <script src="js/ui.js"></script>
-<script>mountCustomerNav("feedback.php");</script>
 </body>
 </html>

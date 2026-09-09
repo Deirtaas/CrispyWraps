@@ -70,7 +70,7 @@ $userEmail = isset($_SESSION['customer']) ? $_SESSION['customer']['email'] : '';
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Checkout — CrispyWraps</title>
-<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
