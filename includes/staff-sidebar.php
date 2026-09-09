@@ -12,6 +12,11 @@ $navItems = [
     'analytics.php' => ['Analytics', 'AN'],
     'reviews.php' => ['Customer Reviews', 'CR']
 ];
+
+// Append the Admin-only Accounts tab
+if ($staffRole === 'Admin') {
+    $navItems['accounts.php'] = ['Manage Accounts', 'AC'];
+}
 ?>
 <aside class="sidebar">
   <a class="brand" href="dashboard.php">
