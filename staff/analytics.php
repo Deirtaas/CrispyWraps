@@ -119,16 +119,5 @@ $lowStockCount = count(array_filter($ingredients, function($i) { return $i['stoc
 </div>
 
 <script src="../js/ui.js"></script>
-<script>
-mountStaffShell("analytics.php");
-
-// Pass PHP aggregated data to JS for the bar chart[cite: 15, 9]
-const topLabels = <?= json_encode(array_map(function($t) { return explode(" ", $t['name'])[0]; }, $top6)) ?>;
-const topValues = <?= json_encode(array_map(function($t) { return (float)$t['revenue']; }, $top6)) ?>;
-
-if (topLabels.length > 0) {
-  barChart(document.getElementById("chart-sales"), topLabels, topValues);
-}
-</script>
 </body>
 </html>

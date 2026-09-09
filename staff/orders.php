@@ -106,6 +106,5 @@ $nextStatus = ['New' => 'Cooking', 'Cooking' => 'Ready', 'Ready' => 'Completed']
   </main>
 </div>
 <script src="../js/ui.js"></script>
-<script>mountStaffShell("orders.php");</script>
 </body>
 </html>

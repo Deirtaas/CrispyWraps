@@ -70,6 +70,5 @@ $fiveStars = count(array_filter($feedbacks, function($f) { return $f['rating'] =
   </main>
 </div>
 <script src="../js/ui.js"></script>
-<script>mountStaffShell("reviews.php");</script>
 </body>
 </html>

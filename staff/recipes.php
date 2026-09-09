@@ -118,6 +118,5 @@ $ingredients = $pdo->query("SELECT id, name, unit, stock FROM ingredients ORDER 
   </main>
 </div>
 <script src="../js/ui.js"></script>
-<script>mountStaffShell("recipes.php");</script>
 </body>
 </html>

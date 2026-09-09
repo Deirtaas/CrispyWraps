@@ -160,6 +160,5 @@ $ingredients = $pdo->query("SELECT * FROM ingredients ORDER BY name ASC")->fetch
   </main>
 </div>
 <script src="../js/ui.js"></script>
-<script>mountStaffShell("inventory.php");</script>
 </body>
 </html>
