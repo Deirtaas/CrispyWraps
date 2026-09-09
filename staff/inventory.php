@@ -57,7 +57,7 @@ $ingredients = $pdo->query("SELECT * FROM ingredients ORDER BY name ASC")->fetch
 </head>
 <body>
 <div class="staff-layout">
-  <div id="staff-shell"></div>
+  <?php include '../includes/staff-sidebar.php'; ?>
   <main class="staff-main">
     <div class="page-head"><h1>Inventory</h1><p class="muted">Stock in, stock out, low stock alerts, expiration and waste.</p></div>
 

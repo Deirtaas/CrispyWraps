@@ -28,7 +28,7 @@ $fiveStars = count(array_filter($feedbacks, function($f) { return $f['rating'] =
 </head>
 <body>
 <div class="staff-layout">
-  <div id="staff-shell"></div>
+  <?php include '../includes/staff-sidebar.php'; ?>
   <main class="staff-main">
     <div class="page-head"><h1>Customer Reviews</h1><p class="muted">View feedback and respond to customers.</p></div>
     

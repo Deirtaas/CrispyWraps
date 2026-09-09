@@ -41,7 +41,7 @@ $ingredients = $pdo->query("SELECT id, name, unit, stock FROM ingredients ORDER 
 </head>
 <body>
 <div class="staff-layout">
-  <div id="staff-shell"></div>
+  <?php include '../includes/staff-sidebar.php'; ?>
   <main class="staff-main">
     <div class="page-head">
       <h1>Recipe Mapping</h1>

@@ -23,7 +23,7 @@ $nextStatus = ['New' => 'Cooking', 'Cooking' => 'Ready', 'Ready' => 'Completed']
 </head>
 <body>
 <div class="staff-layout">
-  <div id="staff-shell"></div>
+  <?php include '../includes/staff-sidebar.php'; ?>
   <main class="staff-main">
     <div class="page-head spread">
       <div><h1>Order Operations</h1><p class="muted">Order list display — view all orders, update status, cancel or refund.</p></div>

@@ -36,7 +36,7 @@ $lowStockCount = count(array_filter($ingredients, function($i) { return $i['stoc
 </head>
 <body>
 <div class="staff-layout">
-  <div id="staff-shell"></div>
+  <?php include '../includes/staff-sidebar.php'; ?>
   <main class="staff-main">
     <div class="page-head"><h1>Analytics</h1><p class="muted">Sales, stock analysis and waste reports.</p></div>
     
