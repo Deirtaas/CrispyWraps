@@ -44,7 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name']);
         $email = trim($_POST['email']);
         $pass = $_POST['password'];
-        $role = $_POST['role'];
+        // Force all new public registrations to be Customers
+        $role = 'Customer';
 
         $userCheck = $pdo->prepare("SELECT email FROM users WHERE email = ?");
         $userCheck->execute([$email]);
@@ -54,19 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($userCheck->fetch() || $cusCheck->fetch()) {
             $errorMsg = "That email is already registered";
         } else {
-            if ($role === 'Customer') {
-                $id = 'cus-' . substr(md5(uniqid()), 0, 6);
-                $pdo->prepare("INSERT INTO customers (id, name, email, password) VALUES (?, ?, ?, ?)")->execute([$id, $name, $email, $pass]);
-                $_SESSION['customer'] = ['id' => $id, 'name' => $name, 'email' => $email];
-                header("Location: menu.php");
-                exit;
-            } else {
-                $id = 'usr-' . substr(md5(uniqid()), 0, 6);
-                $pdo->prepare("INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)")->execute([$id, $name, $email, $pass, $role]);
-                $_SESSION['staff'] = ['id' => $id, 'name' => $name, 'role' => $role];
-                header("Location: staff/dashboard.php");
-                exit;
-            }
+            $id = 'cus-' . substr(md5(uniqid()), 0, 6);
+            $pdo->prepare("INSERT INTO customers (id, name, email, password) VALUES (?, ?, ?, ?)")->execute([$id, $name, $email, $pass]);
+            $_SESSION['customer'] = ['id' => $id, 'name' => $name, 'email' => $email];
+            header("Location: menu.php");
+            exit;
         }
     }
 }
@@ -108,14 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="field"><label>Full name</label><input name="name" required /></div>
       <div class="field"><label>Email</label><input name="email" type="email" required /></div>
       <div class="field"><label>Password</label><input name="password" type="password" required /></div>
-      <div class="field">
-        <label>Account type</label>
-        <select name="role">
-          <option value="Customer">Customer</option>
-          <option value="Staff">Staff</option>
-          <option value="Admin">Admin</option>
-        </select>
-      </div>
       <button type="submit" class="btn" style="width:100%;justify-content:center">Create account</button>
     </form>
     
