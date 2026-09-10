@@ -1,30 +1,52 @@
 <?php
 include '../config/db.php';
-if (!isset($_SESSION['staff'])) { header("Location: ../login.php"); exit; }
+if (!isset($_SESSION['staff'])) {
+    header("Location: ../login.php");
+    exit;
+}
 
-// SQL Aggregations[cite: 15]
-$revenue = $pdo->query("SELECT SUM(total) FROM orders WHERE status NOT IN ('Cancelled', 'Refunded')")->fetchColumn() ?: 0;
-$salesToday = $pdo->query("SELECT SUM(total) FROM orders WHERE DATE(date) = CURDATE() AND status NOT IN ('Cancelled', 'Refunded')")->fetchColumn() ?: 0;
-$totalOrders = $pdo->query("SELECT COUNT(*) FROM orders WHERE status NOT IN ('Cancelled', 'Refunded')")->fetchColumn() ?: 0;
+// 1. Fetch Top Stats
+$totalRev = $pdo->query("SELECT SUM(total) FROM orders WHERE status != 'Cancelled'")->fetchColumn() ?: 0;
+$today = date('Y-m-d');
+$todayRev = $pdo->query("SELECT SUM(total) FROM orders WHERE status != 'Cancelled' AND DATE(date) = '$today'")->fetchColumn() ?: 0;
+$orderCount = $pdo->query("SELECT COUNT(*) FROM orders WHERE status != 'Cancelled'")->fetchColumn() ?: 0;
 $wasteCost = $pdo->query("SELECT SUM(cost) FROM waste")->fetchColumn() ?: 0;
 
-// Sales by Product[cite: 15]
-$salesStmt = $pdo->query("
-    SELECT p.name, SUM(oi.qty) as qty, SUM(oi.price * oi.qty) as revenue 
+// 2. Fetch Chart Data (Top 5 Products by Revenue)
+$chartStmt = $pdo->query("
+    SELECT p.name, SUM(oi.price * oi.qty) as rev 
     FROM order_items oi 
     JOIN products p ON oi.product_id = p.id 
     JOIN orders o ON oi.order_id = o.id 
-    WHERE o.status NOT IN ('Cancelled', 'Refunded')
-    GROUP BY p.id 
-    ORDER BY revenue DESC
+    WHERE o.status != 'Cancelled' 
+    GROUP BY p.name 
+    ORDER BY rev DESC 
+    LIMIT 5
 ");
-$salesData = $salesStmt->fetchAll(PDO::FETCH_ASSOC);
-$top6 = array_slice($salesData, 0, 6);
+$chartData = $chartStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Stock & Waste[cite: 15]
-$ingredients = $pdo->query("SELECT name, stock, unit, reorder FROM ingredients ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
-$wasteLog = $pdo->query("SELECT w.*, i.name as ing_name FROM waste w LEFT JOIN ingredients i ON w.ingredient_id = i.id ORDER BY w.date DESC")->fetchAll(PDO::FETCH_ASSOC);
-$lowStockCount = count(array_filter($ingredients, function($i) { return $i['stock'] <= $i['reorder']; }));
+$labels = [];
+$data = [];
+foreach($chartData as $row) {
+    $labels[] = $row['name'];
+    $data[] = (float)$row['rev'];
+}
+
+// 3. Fetch Sales Report Table
+$salesStmt = $pdo->query("
+    SELECT p.name, SUM(oi.qty) as qty, SUM(oi.price * oi.qty) as rev 
+    FROM order_items oi 
+    JOIN products p ON oi.product_id = p.id 
+    JOIN orders o ON oi.order_id = o.id 
+    WHERE o.status != 'Cancelled' 
+    GROUP BY p.name 
+    ORDER BY rev DESC
+");
+$salesReport = $salesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// 4. Fetch Stock Analysis Table
+$stockStmt = $pdo->query("SELECT name, stock, unit, reorder FROM ingredients ORDER BY name ASC");
+$stockAnalysis = $stockStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
 <html lang="en">
@@ -33,91 +55,117 @@ $lowStockCount = count(array_filter($ingredients, function($i) { return $i['stoc
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Analytics — CrispyWraps Staff</title>
 <link rel="stylesheet" href="/css/styles.css" />
+<!-- Load Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="staff-layout">
   <?php include '../includes/staff-sidebar.php'; ?>
+  
   <main class="staff-main">
-    <div class="page-head"><h1>Analytics</h1><p class="muted">Sales, stock analysis and waste reports.</p></div>
     
-    <div class="grid g4" id="stats">
-      <div class="stat"><div class="k">Total revenue</div><div class="v">₱<?= number_format($revenue, 2) ?></div></div>
-      <div class="stat"><div class="k">Sales today</div><div class="v">₱<?= number_format($salesToday, 2) ?></div></div>
-      <div class="stat"><div class="k">Orders</div><div class="v"><?= $totalOrders ?></div></div>
-      <div class="stat"><div class="k">Waste cost</div><div class="v">₱<?= number_format($wasteCost, 2) ?></div></div>
+    <div class="grid g4" style="margin-bottom: 1.5rem;">
+      <div class="stat"><div class="k">Total Revenue</div><div class="v">₱<?= number_format($totalRev, 2) ?></div></div>
+      <div class="stat"><div class="k">Sales Today</div><div class="v">₱<?= number_format($todayRev, 2) ?></div></div>
+      <div class="stat"><div class="k">Orders</div><div class="v"><?= $orderCount ?></div></div>
+      <div class="stat"><div class="k">Waste Cost</div><div class="v">₱<?= number_format($wasteCost, 2) ?></div></div>
     </div>
 
-    <div class="card" style="margin-top:1rem">
+    <!-- Chart Container -->
+    <div class="card" style="margin-bottom: 1.5rem;">
       <h2>Top products by revenue</h2>
-      <canvas id="chart-sales" style="width:100%;height:260px"></canvas>
+      <div style="height: 300px; width: 100%; margin-top: 1rem;">
+        <canvas id="revenueChart"></canvas>
+      </div>
     </div>
-    
-    <div class="grid g2" style="margin-top:1rem">
+
+    <div class="grid g2">
+      <!-- Sales Report Table -->
       <div class="card">
         <h2>Sales report</h2>
-        <?php if (count($salesData) > 0): ?>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Product</th><th>Qty sold</th><th class="right">Revenue</th></tr></thead>
-              <tbody>
-                <?php foreach ($salesData as $row): ?>
-                  <tr><td><?= htmlspecialchars($row['name']) ?></td><td><?= $row['qty'] ?></td><td class="right">₱<?= number_format($row['revenue'], 2) ?></td></tr>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Product</th><th>Qty Sold</th><th class="right">Revenue</th></tr></thead>
+            <tbody>
+              <?php if (count($salesReport) > 0): ?>
+                <?php foreach($salesReport as $s): ?>
+                <tr>
+                  <td><strong><?= htmlspecialchars($s['name']) ?></strong></td>
+                  <td><?= $s['qty'] ?></td>
+                  <td class="right">₱<?= number_format($s['rev'], 2) ?></td>
+                </tr>
                 <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-        <?php else: ?>
-          <div class="empty">No sales yet.</div>
-        <?php endif; ?>
+              <?php else: ?>
+                <tr><td colspan="3" class="muted center">No sales data available yet.</td></tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
       </div>
-      
+
+      <!-- Stock Analysis Table -->
       <div class="card">
         <h2>Stock analysis</h2>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Ingredient</th><th>On hand</th><th class="right">Status</th></tr></thead>
+            <thead><tr><th>Ingredient</th><th>On Hand</th><th class="right">Status</th></tr></thead>
             <tbody>
-              <?php foreach ($ingredients as $i): ?>
-                <tr>
-                  <td><?= htmlspecialchars($i['name']) ?></td>
-                  <td><?= $i['stock'] ?> <?= $i['unit'] ?></td>
-                  <td class="right"><?= $i['stock'] <= $i['reorder'] ? '<span class="badge b-cancel">Reorder</span>' : '<span class="badge b-ready">Healthy</span>' ?></td>
-                </tr>
+              <?php foreach($stockAnalysis as $st): 
+                $isLow = $st['stock'] <= $st['reorder'];
+                $statusHtml = $isLow ? '<span class="badge b-cancel">Low</span>' : '<span class="badge b-ready">Healthy</span>';
+              ?>
+              <tr>
+                <td><strong><?= htmlspecialchars($st['name']) ?></strong></td>
+                <td><?= $st['stock'] . ' ' . htmlspecialchars($st['unit']) ?></td>
+                <td class="right"><?= $statusHtml ?></td>
+              </tr>
               <?php endforeach; ?>
             </tbody>
           </table>
         </div>
-        <p class="muted" style="margin-top:.6rem"><?= $lowStockCount ?> item(s) at or below reorder level.</p>
       </div>
     </div>
-    
-    <div class="card" style="margin-top:1rem">
-      <h2>Waste report</h2>
-      <?php if (count($wasteLog) > 0): ?>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Date</th><th>Ingredient</th><th>Qty</th><th>Reason</th><th class="right">Cost</th></tr></thead>
-            <tbody>
-              <?php foreach ($wasteLog as $w): ?>
-                <tr>
-                  <td><?= $w['date'] ?></td>
-                  <td><?= htmlspecialchars($w['ing_name'] ?? '—') ?></td>
-                  <td><?= $w['qty'] ?></td>
-                  <td><?= htmlspecialchars($w['reason']) ?></td>
-                  <td class="right">₱<?= number_format($w['cost'], 2) ?></td>
-                </tr>
-              <?php endforeach; ?>
-              <tr><td colspan="4"><strong>Total waste cost</strong></td><td class="right"><strong>₱<?= number_format($wasteCost, 2) ?></strong></td></tr>
-            </tbody>
-          </table>
-        </div>
-      <?php else: ?>
-        <div class="empty">No waste recorded.</div>
-      <?php endif; ?>
-    </div>
+
   </main>
 </div>
 
 <script src="../js/ui.js"></script>
+<script>
+  // Render the Bar Chart
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: <?= json_encode($labels) ?>,
+      datasets: [{
+        label: 'Revenue (₱)',
+        data: <?= json_encode($data) ?>,
+        backgroundColor: '#e8762c',
+        hoverBackgroundColor: '#c25c19',
+        borderRadius: 6,
+        barPercentage: 0.6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) { return '₱' + value; }
+          },
+          grid: { color: '#e9e1d6' }
+        },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+</script>
 </body>
 </html>

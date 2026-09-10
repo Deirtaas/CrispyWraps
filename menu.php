@@ -36,18 +36,19 @@ try {
 
   <?php include 'includes/header.php'; ?>
 
-  <main class="container py-4">
-    <div class="hero-banner wrap" style="padding-top: 2rem;">
+  <main class="wrap">
+    
+    <div class="hero-banner" style="margin-bottom: 2rem;">
       <h1>An Inventory and Ordering System of CrispyWraps</h1>
       <p>Order in a few taps. Behind the counter, every order updates stock automatically through recipe mapping.</p>
     </div>
 
-    <div class="section-head wrap" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <h2>Browse Menu</h2>
-      <input type="text" id="menu-search" placeholder="Search the menu..." style="padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; max-width: 250px;">
+    <div class="spread" style="margin-bottom: 1.5rem;">
+      <h2 style="margin: 0;">Browse Menu</h2>
+      <input type="text" id="menu-search" placeholder="Search the menu..." style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--line); max-width: 250px;">
     </div>
 
-    <div class="category-filters wrap" style="margin-bottom: 2rem; display: flex; gap: 0.5rem;">
+    <div class="category-filters" style="margin-bottom: 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
       <a href="menu.php" class="btn sm <?= empty($selectedCategory) || $selectedCategory == 'All' ? 'active' : 'ghost' ?>">All</a>
       <a href="menu.php?category=Wraps" class="btn sm <?= $selectedCategory == 'Wraps' ? 'active' : 'ghost' ?>">Wraps</a>
       <a href="menu.php?category=Rice Meals" class="btn sm <?= $selectedCategory == 'Rice Meals' ? 'active' : 'ghost' ?>">Rice Meals</a>
@@ -55,12 +56,18 @@ try {
       <a href="menu.php?category=Drinks" class="btn sm <?= $selectedCategory == 'Drinks' ? 'active' : 'ghost' ?>">Drinks</a>
     </div>
 
-    <div class="menu-grid wrap grid g3" id="menu-grid">
+    <div class="grid g3" id="menu-grid">
       <?php if (count($menuItems) > 0): ?>
         <?php foreach ($menuItems as $item): ?>
           <div class="prod">
-            <div class="thumb">
-              <?= strtoupper(substr($item['name'], 0, 2)) ?>
+            <div class="thumb" style="padding: 0; overflow: hidden;">
+              <?php if (!empty($item['image'])): ?>
+                <img src="/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
+              <?php else: ?>
+                <div style="display: grid; place-items: center; height: 100%; width: 100%;">
+                  <?= strtoupper(substr($item['name'], 0, 2)) ?>
+                </div>
+              <?php endif; ?>
             </div>
             <div class="body">
               <div class="spread">
@@ -80,7 +87,7 @@ try {
           </div>
         <?php endforeach; ?>
       <?php else: ?>
-        <p class="muted wrap">No items match your search in this category.</p>
+        <p class="muted">No items match your search in this category.</p>
       <?php endif; ?>
     </div>
   </main>
@@ -99,10 +106,8 @@ try {
         const searchTerm = e.target.value.toLowerCase();
 
         menuItems.forEach(item => {
-          // Find the product name inside the <strong> tag
           const itemName = item.querySelector('strong').textContent.toLowerCase();
           
-          // Toggle display based on whether the name includes the search term
           if (itemName.includes(searchTerm)) {
             item.style.display = 'flex';
           } else {

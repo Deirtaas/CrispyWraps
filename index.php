@@ -1,4 +1,9 @@
 <?php
+// Force the server and browser to bypass caching for the active session
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 include 'config/db.php';
 $picks = $pdo->query("SELECT * FROM products WHERE active = 1 LIMIT 6")->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -45,7 +50,15 @@ $picks = $pdo->query("SELECT * FROM products WHERE active = 1 LIMIT 6")->fetchAl
       $initials = strtoupper(substr($words[0], 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
     ?>
       <article class="prod">
-        <div class="thumb"><?= $initials ?></div>
+        <div class="thumb" style="padding: 0; overflow: hidden;">
+          <?php if (!empty($p['image'])): ?>
+            <img src="/<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
+          <?php else: ?>
+            <div style="display: grid; place-items: center; height: 100%; width: 100%;">
+              <?= $initials ?>
+            </div>
+          <?php endif; ?>
+        </div>
         <div class="body">
           <div class="spread"><strong><?= htmlspecialchars($p['name']) ?></strong><span class="price">₱<?= number_format($p['price'], 2) ?></span></div>
           <small><?= htmlspecialchars($p['desc']) ?></small>

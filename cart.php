@@ -1,7 +1,13 @@
 <?php
 include 'config/db.php';
 
-$customerId = isset($_SESSION['customer']) ? $_SESSION['customer']['id'] : session_id();
+// Kick out unauthenticated users immediately
+if (!isset($_SESSION['customer'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$customerId = $_SESSION['customer']['id'];
 
 // Handle cart updates via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -31,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
 }
 
-// Fetch active cart items[cite: 2, 10]
+// Fetch active cart items
 $stmt = $pdo->prepare("
     SELECT c.qty, c.product_id, p.name, p.category, p.price 
     FROM cart c 
@@ -60,7 +66,7 @@ $total = 0;
   
   <div class="card" style="margin-top:1rem" id="cart-card">
     <?php if (count($cartItems) === 0): ?>
-      <div class="empty">Your cart is empty. <a class="btn sm" href="index.php">Browse the menu</a></div>
+      <div class="empty">Your cart is empty. <a class="btn sm" href="menu.php">Browse the menu</a></div>
     <?php else: ?>
       <div class="table-wrap">
         <table>
