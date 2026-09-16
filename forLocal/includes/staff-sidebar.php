@@ -1,19 +1,18 @@
 <?php
 $activePage = basename($_SERVER['PHP_SELF']);
-$staffName = isset($_SESSION['staff']) ? $_SESSION['staff']['name'] : '';
-$staffRole = isset($_SESSION['staff']) ? $_SESSION['staff']['role'] : '';
+$staffName  = $_SESSION['staff']['name'] ?? '';
+$staffRole  = $_SESSION['staff']['role'] ?? '';
 
 $navItems = [
     'dashboard.php' => ['Dashboard', 'DB'],
-    'orders.php' => ['Order Operations', 'OR'],
+    'orders.php'    => ['Order Operations', 'OR'],
     'inventory.php' => ['Inventory', 'IN'],
-    'recipes.php' => ['Recipe Mapping', 'RM'],
-    'menu.php' => ['Menu Configuration', 'MC'],
+    'recipes.php'   => ['Recipe Mapping', 'RM'],
+    'menu.php'      => ['Menu Configuration', 'MC'],
     'analytics.php' => ['Analytics', 'AN'],
-    'reviews.php' => ['Customer Reviews', 'CR']
+    'reviews.php'   => ['Customer Reviews', 'CR'],
 ];
 
-// Append the Admin-only Accounts tab
 if ($staffRole === 'Admin') {
     $navItems['accounts.php'] = ['Manage Accounts', 'AC'];
 }
@@ -25,8 +24,8 @@ if ($staffRole === 'Admin') {
   </a>
   <nav>
     <?php foreach ($navItems as $url => $info): ?>
-      <a class="<?= $activePage == $url ? 'active' : '' ?>" href="<?= $url ?>">
-        <span><?= $info[1] ?></span><?= $info[0] ?>
+      <a class="<?= $activePage == $url ? 'active' : '' ?>" href="<?= htmlspecialchars($url) ?>">
+        <span><?= htmlspecialchars($info[1]) ?></span><?= htmlspecialchars($info[0]) ?>
       </a>
     <?php endforeach; ?>
   </nav>

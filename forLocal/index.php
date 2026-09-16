@@ -1,11 +1,10 @@
 <?php
-// Force the server and browser to bypass caching for the active session
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
 include 'config/db.php';
-$picks = $pdo->query("SELECT * FROM products WHERE active = 1 LIMIT 6")->fetchAll(PDO::FETCH_ASSOC);
+$picks = $pdo->query("SELECT * FROM products WHERE active = 1 LIMIT 6")->fetchAll();
 ?>
 <!doctype html>
 <html lang="en">
@@ -13,7 +12,7 @@ $picks = $pdo->query("SELECT * FROM products WHERE active = 1 LIMIT 6")->fetchAl
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>An Inventory and Ordering System of CrispyWraps</title>
-<link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
@@ -43,24 +42,27 @@ $picks = $pdo->query("SELECT * FROM products WHERE active = 1 LIMIT 6")->fetchAl
     <h2 class="sec-title" style="margin:0">Popular picks</h2>
     <a class="btn ghost sm" href="menu.php">See full menu</a>
   </div>
-  
+
   <div class="grid g3" style="margin-bottom:1.8rem">
-    <?php foreach ($picks as $p): 
+    <?php foreach ($picks as $p):
       $words = explode(' ', $p['name']);
       $initials = strtoupper(substr($words[0], 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
     ?>
       <article class="prod">
         <div class="thumb" style="padding: 0; overflow: hidden;">
           <?php if (!empty($p['image'])): ?>
-            <img src="/<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
+            <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" />
           <?php else: ?>
             <div style="display: grid; place-items: center; height: 100%; width: 100%;">
-              <?= $initials ?>
+              <?= htmlspecialchars($initials) ?>
             </div>
           <?php endif; ?>
         </div>
         <div class="body">
-          <div class="spread"><strong><?= htmlspecialchars($p['name']) ?></strong><span class="price">₱<?= number_format($p['price'], 2) ?></span></div>
+          <div class="spread">
+            <strong><?= htmlspecialchars($p['name']) ?></strong>
+            <span class="price">₱<?= number_format((float)$p['price'], 2) ?></span>
+          </div>
           <small><?= htmlspecialchars($p['desc']) ?></small>
           <div style="margin-top:auto;padding-top:.6rem" class="spread">
             <span class="badge"><?= htmlspecialchars($p['category']) ?></span>
@@ -73,7 +75,7 @@ $picks = $pdo->query("SELECT * FROM products WHERE active = 1 LIMIT 6")->fetchAl
 
 </main>
 <footer style="text-align: center; padding: 2rem; color: #888; font-size: 0.875rem; border-top: 1px solid var(--line);">
-  CrispyWraps — Inventory & Ordering System
+  CrispyWraps — Inventory &amp; Ordering System
 </footer>
 <script src="js/ui.js"></script>
 </body>

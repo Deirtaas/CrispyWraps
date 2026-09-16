@@ -16,15 +16,20 @@ const STAFF_NAV = [
   ["reviews.php", "Customer Reviews", "CR"],
 ];
 
-// Inside your mountStaffShell function, update the logout click event:
-$("#staff-logout").onclick = () => {
-  location.href = "../logout.php";
-};
+document.addEventListener("DOMContentLoaded", () => {
+  const staffLogout = document.querySelector("#staff-logout");
+  if (staffLogout) {
+    staffLogout.addEventListener("click", (e) => {
+      e.preventDefault();
+      location.href = "../logout.php";
+    });
+  }
 
-// Inside your mountCustomerNav function, update the logout click event:
-const lo = $("#logout-btn");
-if (lo) {
-  lo.onclick = () => {
-    location.href = "logout.php";
-  };
-}
+  const logoutBtn = document.querySelector("#logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      location.href = "logout.php";
+    });
+  }
+});

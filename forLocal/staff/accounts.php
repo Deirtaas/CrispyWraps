@@ -1,7 +1,6 @@
 <?php
 include '../config/db.php';
 
-// Strict Admin-only access check
 if (!isset($_SESSION['staff']) || $_SESSION['staff']['role'] !== 'Admin') {
     header("Location: dashboard.php");
     exit;
@@ -10,30 +9,30 @@ if (!isset($_SESSION['staff']) || $_SESSION['staff']['role'] !== 'Admin') {
 $errorMsg = '';
 $successMsg = '';
 
-// Handle Account Creation & Deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action']) && $_POST['action'] === 'create') {
-        $name = trim($_POST['name']);
+    if (($_POST['action'] ?? '') === 'create') {
+        $name  = trim($_POST['name']);
         $email = trim($_POST['email']);
-        $pass = $_POST['password'];
-        $role = $_POST['role'];
-        
-        // Prevent duplicate emails
+        $pass  = $_POST['password'];
+        $role  = $_POST['role'] === 'Admin' ? 'Admin' : 'Staff';
+
         $stmt = $pdo->prepare("SELECT email FROM users WHERE email = ?");
         $stmt->execute([$email]);
+
         if ($stmt->fetch()) {
             $errorMsg = "That email is already registered to a staff member.";
         } else {
-            $id = 'usr-' . substr(md5(uniqid()), 0, 6);
-            $pdo->prepare("INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)")->execute([$id, $name, $email, $pass, $role]);
-            $successMsg = "Account for $name successfully created.";
+            $id   = 'usr-' . substr(md5(uniqid('', true)), 0, 6);
+            $hash = password_hash($pass, PASSWORD_DEFAULT);
+            $pdo->prepare("INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)")
+                ->execute([$id, $name, $email, $hash, $role]);
+            $successMsg = "Account for " . htmlspecialchars($name) . " successfully created.";
         }
     }
-    
-    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+
+    if (($_POST['action'] ?? '') === 'delete') {
         $delId = $_POST['id'];
-        // Prevent the Admin from accidentally deleting themselves
-        if ($delId !== $_SESSION['staff']['id']) { 
+        if ($delId !== $_SESSION['staff']['id']) {
             $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$delId]);
             $successMsg = "Staff account deleted.";
         } else {
@@ -42,8 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all staff and admins
-$users = $pdo->query("SELECT * FROM users ORDER BY role ASC, name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$users = $pdo->query("SELECT * FROM users ORDER BY role ASC, name ASC")->fetchAll();
 ?>
 <!doctype html>
 <html lang="en">
@@ -51,12 +49,12 @@ $users = $pdo->query("SELECT * FROM users ORDER BY role ASC, name ASC")->fetchAl
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Manage Accounts — CrispyWraps Admin</title>
-<link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="../css/styles.css" />
 </head>
 <body>
 <div class="staff-layout">
   <?php include '../includes/staff-sidebar.php'; ?>
-  
+
   <main class="staff-main">
     <div class="page-head">
       <h1>Manage Accounts</h1>
@@ -74,6 +72,7 @@ $users = $pdo->query("SELECT * FROM users ORDER BY role ASC, name ASC")->fetchAl
       <div class="card">
         <h2>Register New Staff</h2>
         <form method="POST">
+          <?= csrf_field() ?>
           <input type="hidden" name="action" value="create">
           <div class="field">
             <label>Full Name</label>
@@ -86,7 +85,7 @@ $users = $pdo->query("SELECT * FROM users ORDER BY role ASC, name ASC")->fetchAl
           <div class="row">
             <div class="field grow">
               <label>Password</label>
-              <input name="password" type="text" required />
+              <input name="password" type="password" required />
             </div>
             <div class="field grow">
               <label>Account Role</label>
@@ -122,8 +121,9 @@ $users = $pdo->query("SELECT * FROM users ORDER BY role ASC, name ASC")->fetchAl
                   <td class="right">
                     <?php if ($u['id'] !== $_SESSION['staff']['id']): ?>
                       <form method="POST" style="margin:0" onsubmit="return confirm('Are you sure you want to revoke this account?');">
+                        <?= csrf_field() ?>
                         <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="id" value="<?= $u['id'] ?>">
+                        <input type="hidden" name="id" value="<?= htmlspecialchars($u['id']) ?>">
                         <button type="submit" class="btn ghost sm">Revoke</button>
                       </form>
                     <?php else: ?>
